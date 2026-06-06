@@ -14,7 +14,7 @@ fullscreen = 0
 android.minapi = 21
 android.api = 33
 android.ndk = 25b
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a
 
 android.permissions = INTERNET, RECORD_AUDIO, MODIFY_AUDIO_SETTINGS
 
