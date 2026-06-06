@@ -10,42 +10,75 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build APK (Docker buildozer)
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - uses: actions/setup-python@v5
         with:
-          command: android debug
-          workdir: .
-          buildozer_version: stable
+          python-version: "3.9"
 
-      - name: Get version
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            python3-pip \
+            build-essential \
+            git \
+            ffmpeg \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libportmidi-dev \
+            libswscale-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            zlib1g-dev \
+            libgstreamer1.0 \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            openjdk-11-jdk \
+            unzip \
+            zip
+
+      - name: Install buildozer
+        run: |
+          pip3 install --upgrade Cython==0.29.33
+          pip3 install --upgrade buildozer
+
+      - name: Cache buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+
+      - name: Build with buildozer
+        env:
+          JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+        run: |
+          yes | buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RANI-AI-APK
+          path: bin/*.apk
+
+      - name: Get version info
         id: ver
         run: |
           V=$(grep '^version' buildozer.spec | cut -d= -f2 | tr -d ' ')
           echo "version=$V" >> $GITHUB_OUTPUT
           echo "tag=v${V}-b${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: RANI-AI-APK
-          path: ${{ steps.buildozer.outputs.filename }}
-
-      - name: Create GitHub Release
+      - name: Release APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
-          name: "RANI AI v${{ steps.ver.outputs.version }} — Build ${{ github.run_number }}"
-          body: |
-            ### RANI AI Mobile App — Auto Build
-            **এই APK download করে phone-এ install করুন।**
-            - Build: ${{ github.run_number }}
-            - Commit: ${{ github.sha }}
-          files: ${{ steps.buildozer.outputs.filename }}
+          name: "RANI AI v${{ steps.ver.outputs.version }} Build-${{ github.run_number }}"
+          body: "Auto-built APK. Download করে phone-এ install করুন।"
+          files: bin/*.apk
           make_latest: true
