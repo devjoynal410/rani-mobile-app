@@ -5,6 +5,8 @@ plugins {
 android {
     namespace "com.joynal.raniai"
     compileSdk 33
+    buildToolsVersion "33.0.0"
+
     defaultConfig {
         applicationId "com.joynal.raniai"
         minSdk 21
@@ -12,12 +14,14 @@ android {
         versionCode 1
         versionName "1.0.0"
     }
+
     buildTypes {
         debug { minifyEnabled false }
         release { minifyEnabled false }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }

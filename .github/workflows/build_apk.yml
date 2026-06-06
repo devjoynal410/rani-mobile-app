@@ -17,22 +17,23 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '11'
           distribution: 'temurin'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle
+      - name: Setup Gradle 7.6
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: "8.0"
+          gradle-version: "7.6"
 
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           gradle :app:assembleDebug
-          find . -name "*.apk" -exec ls -lh {} \;
+          echo "=== APK files ==="
+          find . -name "*.apk" -not -path "*/cache/*" | xargs ls -lh 2>/dev/null
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
@@ -40,5 +41,5 @@ jobs:
           tag_name: build-${{ github.run_number }}
           name: "RANI AI — Build ${{ github.run_number }}"
           body: "APK download করুন নিচে থেকে।"
-          files: app/build/outputs/apk/**/*.apk
+          files: app/build/outputs/apk/debug/app-debug.apk
           make_latest: true
