@@ -17,8 +17,14 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
+
+      - name: Install Gradle 8.7
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip -O gradle.zip
+          unzip -q gradle.zip -d $HOME/gradle-dist
+          echo "$HOME/gradle-dist/gradle-8.7/bin" >> $GITHUB_PATH
 
       - name: Build APK
         run: |
