@@ -4,345 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#050D1A">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>RANI AI</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background:#050D1A; color:#C8DCF0; font-family:'Segoe UI',Arial,sans-serif; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
 
-body {
-  background: #050D1A;
-  color: #C8DCF0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Header ─────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #040C18 0%, #060F20 100%);
-  border-bottom: 1px solid rgba(0,90,180,0.20);
-  flex-shrink: 0;
-  gap: 10px;
-}
-.logo {
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 3px;
-  background: linear-gradient(90deg, #e8406a, #ff6b9d);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.header-sub {
-  font-size: 9px;
-  color: #2A4A6A;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  line-height: 1;
-  margin-top: 2px;
-}
-.header-info { flex: 1; }
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0,50,110,0.25);
-  border: 1px solid rgba(0,90,180,0.20);
-  border-radius: 20px;
-  padding: 5px 10px;
-  font-size: 11px;
-  color: #8890aa;
-}
-.status-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #334455;
-  transition: background .3s;
-  flex-shrink: 0;
-}
-.status-dot.connected { background: #00d9f5; box-shadow: 0 0 6px #00d9f5; }
-.status-dot.listening { background: #1ef560; box-shadow: 0 0 6px #1ef560; animation: pulse 1s infinite; }
-.status-dot.speaking  { background: #00d9f5; box-shadow: 0 0 6px #00d9f5; animation: pulse .6s infinite; }
-.status-dot.thinking  { background: #f5c518; box-shadow: 0 0 6px #f5c518; animation: pulse 1.2s infinite; }
+/* Header */
+.header { display:flex; align-items:center; padding:10px 14px; background:linear-gradient(135deg,#040C18,#060F20); border-bottom:1px solid rgba(0,90,180,.20); flex-shrink:0; gap:10px; }
+.logo { font-size:22px; font-weight:900; letter-spacing:3px; background:linear-gradient(90deg,#e8406a,#ff6b9d); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.header-sub { font-size:9px; color:#2A4A6A; letter-spacing:2px; text-transform:uppercase; }
+.header-info { flex:1; }
+.status-pill { display:flex; align-items:center; gap:6px; background:rgba(0,50,110,.25); border:1px solid rgba(0,90,180,.20); border-radius:20px; padding:5px 10px; font-size:11px; color:#8890aa; }
+.status-dot { width:8px; height:8px; border-radius:50%; background:#334455; transition:background .3s; flex-shrink:0; }
+.status-dot.connected { background:#00d9f5; box-shadow:0 0 6px #00d9f5; }
+.status-dot.listening { background:#1ef560; box-shadow:0 0 6px #1ef560; animation:pulse 1s infinite; }
+.status-dot.speaking  { background:#00d9f5; box-shadow:0 0 6px #00d9f5; animation:pulse .6s infinite; }
+.status-dot.thinking  { background:#f5c518; box-shadow:0 0 6px #f5c518; animation:pulse 1.2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+.btn-settings { background:none; border:none; color:#2A4A6A; font-size:18px; cursor:pointer; padding:4px; }
 
-/* ── Connect bar ─────────────────────────────── */
-.connect-bar {
-  display: flex;
-  gap: 8px;
-  padding: 8px 14px;
-  background: #040C18;
-  border-bottom: 1px solid rgba(0,90,180,0.15);
-  flex-shrink: 0;
-}
-.connect-bar input {
-  flex: 1;
-  background: rgba(0,30,70,0.40);
-  border: 1px solid rgba(0,80,160,0.30);
-  border-radius: 8px;
-  color: #C8DCF0;
-  padding: 7px 12px;
-  font-size: 13px;
-  outline: none;
-}
-.connect-bar input:focus { border-color: #e8406a; }
-.btn-connect {
-  background: linear-gradient(135deg, #0055CC, #0099FF);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  padding: 7px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-}
-.btn-connect.active { background: linear-gradient(135deg, #CC2244, #e8406a); }
-.btn-connect:active { opacity: .8; }
+/* Connect bar */
+.connect-bar { display:flex; gap:8px; padding:8px 14px; background:#040C18; border-bottom:1px solid rgba(0,90,180,.15); flex-shrink:0; }
+.connect-bar input { flex:1; background:rgba(0,30,70,.40); border:1px solid rgba(0,80,160,.30); border-radius:8px; color:#C8DCF0; padding:7px 12px; font-size:13px; outline:none; }
+.connect-bar input:focus { border-color:#e8406a; }
+.btn-connect { background:linear-gradient(135deg,#0055CC,#0099FF); border:none; border-radius:8px; color:#fff; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.btn-connect.active { background:linear-gradient(135deg,#CC2244,#e8406a); }
 
-/* ── Orb area ─────────────────────────────────── */
-.orb-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 0 10px;
-  flex-shrink: 0;
-  position: relative;
-}
-.orb-outer {
-  width: 88px; height: 88px;
-  border-radius: 50%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.orb-ring {
-  position: absolute;
-  width: 100%; height: 100%;
-  border-radius: 50%;
-  border: 2px solid rgba(0,150,255,0.20);
-  animation: orbRing 3s ease-in-out infinite;
-}
-.orb-ring-2 {
-  position: absolute;
-  width: 115%; height: 115%;
-  border-radius: 50%;
-  border: 1px solid rgba(0,150,255,0.10);
-  animation: orbRing 3s ease-in-out infinite reverse;
-  top: -7.5%; left: -7.5%;
-}
-@keyframes orbRing {
-  0%,100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.05); opacity: 1; }
-}
-.orb-core {
-  width: 70px; height: 70px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #0088FF, #003388 60%, #020810);
-  box-shadow: 0 0 20px rgba(0,100,220,0.4), 0 0 40px rgba(0,60,160,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px;
-  transition: all .3s;
-  position: relative;
-  overflow: hidden;
-}
-.orb-core::after {
-  content: '';
-  position: absolute;
-  top: 12%; left: 18%;
-  width: 30%; height: 18%;
-  background: rgba(255,255,255,0.15);
-  border-radius: 50%;
-  transform: rotate(-30deg);
-}
-.orb-core.listening {
-  background: radial-gradient(circle at 35% 35%, #00CC66, #006633 60%, #020810);
-  box-shadow: 0 0 25px rgba(0,200,100,0.5), 0 0 50px rgba(0,150,60,0.25);
-  animation: orbPulse 1s ease-in-out infinite;
-}
-.orb-core.speaking {
-  background: radial-gradient(circle at 35% 35%, #00BBDD, #005577 60%, #020810);
-  box-shadow: 0 0 25px rgba(0,180,220,0.5), 0 0 50px rgba(0,100,160,0.25);
-  animation: orbPulse .6s ease-in-out infinite;
-}
-.orb-core.thinking {
-  background: radial-gradient(circle at 35% 35%, #DDAA00, #886600 60%, #020810);
-  box-shadow: 0 0 25px rgba(220,170,0,0.5), 0 0 50px rgba(150,100,0,0.25);
-  animation: orbPulse 1.2s ease-in-out infinite;
-}
-@keyframes orbPulse {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-}
-.orb-label {
-  font-size: 11px;
-  color: #2A4A6A;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-top: 8px;
-}
+/* Orb */
+.orb-area { display:flex; flex-direction:column; align-items:center; padding:14px 0 8px; flex-shrink:0; }
+.orb-outer { width:82px; height:82px; border-radius:50%; position:relative; display:flex; align-items:center; justify-content:center; }
+.orb-ring { position:absolute; width:100%; height:100%; border-radius:50%; border:2px solid rgba(0,150,255,.20); animation:orbRing 3s ease-in-out infinite; }
+.orb-ring-2 { position:absolute; width:115%; height:115%; border-radius:50%; border:1px solid rgba(0,150,255,.10); animation:orbRing 3s ease-in-out infinite reverse; top:-7.5%; left:-7.5%; }
+@keyframes orbRing { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.05);opacity:1} }
+.orb-core { width:66px; height:66px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#0088FF,#003388 60%,#020810); box-shadow:0 0 20px rgba(0,100,220,.4); display:flex; align-items:center; justify-content:center; font-size:26px; transition:all .3s; position:relative; overflow:hidden; }
+.orb-core::after { content:''; position:absolute; top:12%; left:18%; width:30%; height:18%; background:rgba(255,255,255,.15); border-radius:50%; transform:rotate(-30deg); }
+.orb-core.listening { background:radial-gradient(circle at 35% 35%,#00CC66,#006633 60%,#020810); box-shadow:0 0 25px rgba(0,200,100,.5); animation:orbPulse 1s ease-in-out infinite; }
+.orb-core.speaking  { background:radial-gradient(circle at 35% 35%,#00BBDD,#005577 60%,#020810); box-shadow:0 0 25px rgba(0,180,220,.5); animation:orbPulse .6s ease-in-out infinite; }
+.orb-core.thinking  { background:radial-gradient(circle at 35% 35%,#DDAA00,#886600 60%,#020810); box-shadow:0 0 25px rgba(220,170,0,.5); animation:orbPulse 1.2s ease-in-out infinite; }
+@keyframes orbPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+.orb-label { font-size:10px; color:#2A4A6A; letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+.energy-bar { display:flex; align-items:flex-end; gap:2px; height:20px; margin-top:5px; }
+.bar { width:4px; border-radius:2px; background:rgba(0,100,200,.25); transition:height .1s ease; min-height:3px; }
+.bar.active { background:rgba(0,180,255,.7); }
 
-/* ── Energy bars ──────────────────────────────── */
-.energy-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 24px;
-  margin-top: 6px;
-}
-.bar {
-  width: 4px;
-  border-radius: 2px;
-  background: rgba(0,100,200,0.25);
-  transition: height .1s ease;
-  min-height: 3px;
-}
-.bar.active { background: rgba(0,180,255,0.7); }
-
-/* ── Chat ─────────────────────────────────────── */
-.chat-area {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #050D1A;
-}
-.chat-area::-webkit-scrollbar { width: 3px; }
-.chat-area::-webkit-scrollbar-thumb { background: #1a2540; border-radius: 2px; }
-
-.bubble {
-  max-width: 88%;
-  padding: 9px 13px;
-  border-radius: 16px;
-  font-size: 13.5px;
-  line-height: 1.5;
-  word-break: break-word;
-  animation: fadeUp .2s ease;
-}
+/* Chat */
+.chat-area { flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
+.chat-area::-webkit-scrollbar { width:3px; }
+.chat-area::-webkit-scrollbar-thumb { background:#1a2540; border-radius:2px; }
+.bubble { max-width:88%; padding:9px 13px; border-radius:16px; font-size:13.5px; line-height:1.5; word-break:break-word; animation:fadeUp .2s ease; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-.bubble.user {
-  background: rgba(30,16,48,0.80);
-  border: 1px solid rgba(232,64,106,0.25);
-  color: #f0c0d0;
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-}
-.bubble.rani {
-  background: rgba(10,24,48,0.80);
-  border: 1px solid rgba(0,217,245,0.15);
-  color: #c8f0f8;
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
-}
-.bubble.sys {
-  background: transparent;
-  color: #2A4A6A;
-  font-size: 11px;
-  align-self: center;
-  font-style: italic;
-  text-align: center;
-}
-.bubble-name {
-  font-size: 10px;
-  font-weight: 700;
-  margin-bottom: 3px;
-  opacity: .6;
-  letter-spacing: .5px;
-}
-.bubble.user .bubble-name { color: #e8406a; }
-.bubble.rani .bubble-name { color: #00d9f5; }
+.bubble.user { background:rgba(30,16,48,.80); border:1px solid rgba(232,64,106,.25); color:#f0c0d0; align-self:flex-end; border-bottom-right-radius:4px; }
+.bubble.rani { background:rgba(10,24,48,.80); border:1px solid rgba(0,217,245,.15); color:#c8f0f8; align-self:flex-start; border-bottom-left-radius:4px; }
+.bubble.sys { background:transparent; color:#2A4A6A; font-size:11px; align-self:center; font-style:italic; text-align:center; }
+.bubble-name { font-size:10px; font-weight:700; margin-bottom:3px; opacity:.6; letter-spacing:.5px; }
+.bubble.user .bubble-name { color:#e8406a; }
+.bubble.rani .bubble-name { color:#00d9f5; }
+.bubble img { max-width:100%; border-radius:8px; margin-top:6px; display:block; }
+.copy-btn { background:none; border:1px solid rgba(0,217,245,.2); border-radius:4px; color:#00d9f5; font-size:10px; padding:2px 6px; cursor:pointer; margin-top:6px; float:right; }
 
-/* ── Live text ────────────────────────────────── */
-.live-text {
-  padding: 0 14px;
-  color: #00d9f5;
-  font-size: 12px;
-  font-style: italic;
-  min-height: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height .2s, padding .2s;
-  flex-shrink: 0;
-  background: #050D1A;
-}
-.live-text.visible {
-  max-height: 40px;
-  padding: 6px 14px;
-  border-top: 1px solid rgba(0,217,245,0.10);
-}
+/* Live text */
+.live-text { padding:0 14px; color:#00d9f5; font-size:12px; font-style:italic; min-height:0; max-height:0; overflow:hidden; transition:max-height .2s,padding .2s; flex-shrink:0; }
+.live-text.visible { max-height:40px; padding:6px 14px; border-top:1px solid rgba(0,217,245,.10); }
 
-/* ── Bottom bar ───────────────────────────────── */
-.bottom-bar {
-  display: flex;
-  gap: 8px;
-  padding: 8px 14px;
-  background: linear-gradient(0deg, #040C18, #050D1A);
-  border-top: 1px solid rgba(0,90,180,0.18);
-  flex-shrink: 0;
-  align-items: flex-end;
-}
-.text-input {
-  flex: 1;
-  background: rgba(0,30,70,0.40);
-  border: 1px solid rgba(0,80,160,0.30);
-  border-radius: 20px;
-  color: #C8DCF0;
-  padding: 10px 14px;
-  font-size: 13px;
-  outline: none;
-  resize: none;
-  max-height: 72px;
-  overflow-y: auto;
-  font-family: inherit;
-}
-.text-input:focus { border-color: rgba(0,150,255,0.50); }
-.text-input::placeholder { color: #2A4A6A; }
+/* Bottom bar */
+.bottom-bar { display:flex; flex-direction:column; padding:8px 14px; background:linear-gradient(0deg,#040C18,#050D1A); border-top:1px solid rgba(0,90,180,.18); flex-shrink:0; gap:8px; }
+.input-row { display:flex; gap:8px; align-items:flex-end; }
+.text-input { flex:1; background:rgba(0,30,70,.40); border:1px solid rgba(0,80,160,.30); border-radius:20px; color:#C8DCF0; padding:10px 14px; font-size:13px; outline:none; resize:none; max-height:72px; overflow-y:auto; font-family:inherit; }
+.text-input:focus { border-color:rgba(0,150,255,.50); }
+.text-input::placeholder { color:#2A4A6A; }
+.btn-send { background:linear-gradient(135deg,#0055CC,#0099FF); border:none; border-radius:50%; width:42px; height:42px; font-size:16px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(0,100,220,.35); }
+.btn-mic { background:rgba(13,21,37,.80); border:2px solid rgba(0,80,160,.40); border-radius:50%; width:42px; height:42px; font-size:18px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.btn-mic.recording { background:rgba(232,64,106,.15); border-color:#e8406a; box-shadow:0 0 12px rgba(232,64,106,.4); animation:pulse 1s infinite; }
+.tools-row { display:flex; gap:8px; justify-content:center; }
+.btn-tool { background:rgba(0,30,70,.40); border:1px solid rgba(0,80,160,.25); border-radius:10px; color:#8890aa; font-size:11px; padding:5px 12px; cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; }
+.btn-tool:active { opacity:.7; background:rgba(0,80,160,.30); }
 
-.btn-send {
-  background: linear-gradient(135deg, #0055CC, #0099FF);
-  border: none;
-  border-radius: 50%;
-  width: 42px; height: 42px;
-  font-size: 16px;
-  cursor: pointer;
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 10px rgba(0,100,220,0.35);
-}
-.btn-send:active { opacity: .8; transform: scale(.94); }
+/* Settings overlay */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; }
+.overlay.show { display:flex; }
+.settings-box { background:#080d18; border:1px solid rgba(0,90,180,.30); border-radius:16px; padding:20px; width:88%; max-width:340px; }
+.settings-title { color:#e8406a; font-size:16px; font-weight:700; margin-bottom:16px; }
+.settings-row { margin-bottom:12px; }
+.settings-label { font-size:12px; color:#8890aa; margin-bottom:4px; }
+.settings-input { width:100%; background:rgba(0,30,70,.40); border:1px solid rgba(0,80,160,.30); border-radius:8px; color:#C8DCF0; padding:8px 12px; font-size:13px; outline:none; }
+.settings-btn { width:100%; background:linear-gradient(135deg,#0055CC,#0099FF); border:none; border-radius:8px; color:#fff; padding:10px; font-size:14px; font-weight:700; cursor:pointer; margin-top:8px; }
+.settings-close { background:rgba(200,50,50,.15); border:1px solid rgba(200,50,50,.25); border-radius:8px; color:#ff6666; padding:8px; font-size:13px; cursor:pointer; width:100%; margin-top:6px; }
 
-.btn-mic {
-  background: rgba(13,21,37,0.80);
-  border: 2px solid rgba(0,80,160,0.40);
-  border-radius: 50%;
-  width: 42px; height: 42px;
-  font-size: 18px;
-  cursor: pointer;
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .2s;
-}
-.btn-mic.recording {
-  background: rgba(232,64,106,0.15);
-  border-color: #e8406a;
-  box-shadow: 0 0 12px rgba(232,64,106,0.4);
-  animation: pulse 1s infinite;
-}
-.btn-mic:active { opacity: .8; }
+/* Hidden file inputs */
+#cameraInput, #galleryInput { display:none; }
 </style>
 </head>
 <body>
+
+<input type="file" id="cameraInput" accept="image/*" capture="camera">
+<input type="file" id="galleryInput" accept="image/*,*/*">
+
+<!-- Settings overlay -->
+<div class="overlay" id="settingsOverlay">
+  <div class="settings-box">
+    <div class="settings-title">⚙️ Settings</div>
+    <div class="settings-row">
+      <div class="settings-label">PC IP Address</div>
+      <input class="settings-input" id="settingsIP" type="text" placeholder="192.168.0.161">
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Port</div>
+      <input class="settings-input" id="settingsPort" type="number" value="8765">
+    </div>
+    <button class="settings-btn" onclick="saveSettings()">Save &amp; Connect</button>
+    <button class="settings-close" onclick="closeSettings()">Close</button>
+  </div>
+</div>
 
 <!-- Header -->
 <div class="header">
@@ -354,6 +126,7 @@ body {
     <div class="status-dot" id="dot"></div>
     <span id="statusTxt">Offline</span>
   </div>
+  <button class="btn-settings" onclick="openSettings()">⚙</button>
 </div>
 
 <!-- Connect bar -->
@@ -382,303 +155,301 @@ body {
 
 <!-- Chat -->
 <div class="chat-area" id="chat"></div>
-
-<!-- Live text -->
 <div class="live-text" id="liveTxt"></div>
 
 <!-- Bottom bar -->
 <div class="bottom-bar">
-  <textarea class="text-input" id="msgInput" placeholder="Type a message..." rows="1"
-    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendText();}"></textarea>
-  <button class="btn-send" onclick="sendText()">&#9658;</button>
-  <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎤</button>
+  <div class="tools-row">
+    <button class="btn-tool" onclick="openCamera()">📷 Camera</button>
+    <button class="btn-tool" onclick="openGallery()">🖼 Gallery</button>
+    <button class="btn-tool" onclick="sendLocation()">📍 Location</button>
+    <button class="btn-tool" onclick="clearChat()">🗑 Clear</button>
+  </div>
+  <div class="input-row">
+    <textarea class="text-input" id="msgInput" placeholder="Type a message..." rows="1"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendText();}"></textarea>
+    <button class="btn-send" onclick="sendText()">&#9658;</button>
+    <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎤</button>
+  </div>
 </div>
 
 <script>
-const PORT = 8765;
-let ws = null, connected = false, recording = false;
-let audioCtx = null, micStream = null, scriptProcessor = null;
-let energyAnim = null;
+const PORT_DEFAULT = 8765;
+let ws=null, connected=false, recording=false;
+let audioCtx=null, micStream=null, scriptProcessor=null, energyAnim=null;
+const audioQueue=[];
+let isPlaying=false;
 
-// Load saved IP + auto-connect
+// ── Init ─────────────────────────────────────────────
 const savedIP = localStorage.getItem('rani_ip') || '';
+const savedPort = localStorage.getItem('rani_port') || PORT_DEFAULT;
 document.getElementById('ipInput').value = savedIP;
-if (savedIP) setTimeout(() => connect(), 800); // auto-connect on start
+document.getElementById('settingsIP').value = savedIP;
+document.getElementById('settingsPort').value = savedPort;
+if (savedIP) setTimeout(connect, 900);
 
-// Auto-reconnect when disconnected
 let reconnectTimer = null;
 function scheduleReconnect() {
   if (reconnectTimer) return;
   const ip = localStorage.getItem('rani_ip');
   if (!ip) return;
-  reconnectTimer = setTimeout(() => {
-    reconnectTimer = null;
-    if (!connected) connect();
-  }, 4000);
+  reconnectTimer = setTimeout(() => { reconnectTimer=null; if(!connected) connect(); }, 4000);
 }
 
 // ── WebSocket ─────────────────────────────────────────
-function toggleConnect() {
-  if (connected) disconnect(); else connect();
-}
+function toggleConnect() { connected ? disconnect() : connect(); }
 
 function connect() {
   const ip = document.getElementById('ipInput').value.trim();
+  const port = localStorage.getItem('rani_port') || PORT_DEFAULT;
   if (!ip) { addSys('PC IP address দিন'); return; }
   localStorage.setItem('rani_ip', ip);
   setStatus('connecting', 'Connecting...');
   document.getElementById('connectBtn').textContent = '...';
   document.getElementById('connectBtn').className = 'btn-connect';
 
-  ws = new WebSocket(`ws://${ip}:${PORT}`);
+  ws = new WebSocket(`ws://${ip}:${port}`);
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
-    connected = true;
-    setStatus('connected', 'Connected ✓');
-    document.getElementById('connectBtn').textContent = 'Disconnect';
-    document.getElementById('connectBtn').className = 'btn-connect active';
+    connected=true;
+    setStatus('connected','Connected ✓');
+    document.getElementById('connectBtn').textContent='Disconnect';
+    document.getElementById('connectBtn').className='btn-connect active';
     addSys('RANI-এর সাথে connected!');
     setOrb('standby');
   };
 
   ws.onmessage = (e) => {
-    if (e.data instanceof ArrayBuffer) {
-      playAudioBuffer(e.data); return;
-    }
+    if (e.data instanceof ArrayBuffer) { playAudioBuffer(e.data); return; }
     try {
       const msg = JSON.parse(e.data);
-      if (msg.type === 'text') {
-        if (msg.final || msg.text === undefined) {
-          const t = msg.text || msg.value || '';
+      if (msg.type==='text') {
+        if (msg.final || msg.text===undefined) {
+          const t = msg.text||msg.value||'';
           if (t.trim()) addBubble('rani', t);
           hideLive();
-        } else {
-          showLive(msg.text);
-        }
-      } else if (msg.type === 'audio') {
-        const raw = base64ToAB(msg.data);
-        playAudioBuffer(raw);
-      } else if (msg.type === 'status') {
-        handleStatus(msg.value || msg.state || '');
-      } else if (msg.type === 'pong') {
-        // ignore
+        } else { showLive(msg.text); }
+      } else if (msg.type==='audio') {
+        playAudioBuffer(base64ToAB(msg.data));
+      } else if (msg.type==='status') {
+        handleStatus(msg.value||msg.state||'');
       }
     } catch(e) {}
   };
 
-  ws.onerror = () => setStatus('error', 'Retrying...');
+  ws.onerror = () => setStatus('error','Retrying...');
   ws.onclose = () => {
-    connected = false;
-    setStatus('disconnected', 'Reconnecting...');
-    document.getElementById('connectBtn').textContent = 'Connect';
-    document.getElementById('connectBtn').className = 'btn-connect';
+    connected=false;
+    setStatus('disconnected','Reconnecting...');
+    document.getElementById('connectBtn').textContent='Connect';
+    document.getElementById('connectBtn').className='btn-connect';
     setOrb('off');
-    scheduleReconnect(); // auto-reconnect
+    scheduleReconnect();
   };
 }
 
-function disconnect() {
-  if (ws) ws.close();
+function disconnect() { if(ws) ws.close(); }
+
+// ── Settings ─────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settingsIP').value = localStorage.getItem('rani_ip')||'';
+  document.getElementById('settingsPort').value = localStorage.getItem('rani_port')||PORT_DEFAULT;
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+function saveSettings() {
+  const ip = document.getElementById('settingsIP').value.trim();
+  const port = document.getElementById('settingsPort').value.trim();
+  if (ip) { localStorage.setItem('rani_ip', ip); document.getElementById('ipInput').value=ip; }
+  if (port) localStorage.setItem('rani_port', port);
+  closeSettings();
+  if (!connected) connect();
 }
 
 // ── Status & Orb ─────────────────────────────────────
 function setStatus(state, text) {
-  const dot = document.getElementById('dot');
-  dot.className = 'status-dot';
+  const dot=document.getElementById('dot');
+  dot.className='status-dot';
   if (['connected','listening','speaking','thinking'].includes(state)) dot.classList.add(state);
-  document.getElementById('statusTxt').textContent = text;
+  document.getElementById('statusTxt').textContent=text;
 }
-
 function handleStatus(state) {
-  const map = {
-    listening: ['listening', '🟢 Listening...', 'LISTENING'],
-    thinking:  ['thinking',  '🟡 Thinking...', 'THINKING'],
-    speaking:  ['speaking',  '🔵 Speaking...', 'SPEAKING'],
-    standby:   ['connected', '✓ Standby',      'STANDBY'],
-    connected: ['connected', '✓ Connected',    'STANDBY'],
+  const map={
+    listening:['listening','🟢 Listening...','LISTENING'],
+    thinking: ['thinking','🟡 Thinking...','THINKING'],
+    speaking: ['speaking','🔵 Speaking...','SPEAKING'],
+    standby:  ['connected','✓ Standby','STANDBY'],
+    connected:['connected','✓ Connected','STANDBY'],
   };
-  const [cls, txt, orbLbl] = map[state] || ['connected', state, 'STANDBY'];
-  setStatus(cls, txt);
-  setOrb(state);
+  const [cls,txt,lbl]=map[state]||['connected',state,'STANDBY'];
+  setStatus(cls,txt); setOrb(state);
 }
-
 function setOrb(state) {
-  const orb = document.getElementById('orb');
-  const lbl = document.getElementById('orbLabel');
-  orb.className = 'orb-core';
-  const icons = { listening:'🎙', speaking:'🔊', thinking:'💭', standby:'🌸', off:'🌸' };
-  const labels = { listening:'LISTENING', speaking:'SPEAKING', thinking:'THINKING', standby:'STANDBY', off:'STANDBY' };
-  if (state !== 'standby' && state !== 'off') orb.classList.add(state);
-  orb.textContent = icons[state] || '🌸';
-  lbl.textContent = labels[state] || 'STANDBY';
+  const orb=document.getElementById('orb');
+  const lbl=document.getElementById('orbLabel');
+  orb.className='orb-core';
+  const icons={listening:'🎙',speaking:'🔊',thinking:'💭',standby:'🌸',off:'🌸'};
+  const labels={listening:'LISTENING',speaking:'SPEAKING',thinking:'THINKING',standby:'STANDBY',off:'STANDBY'};
+  if(state!=='standby'&&state!=='off') orb.classList.add(state);
+  orb.textContent=icons[state]||'🌸';
+  lbl.textContent=labels[state]||'STANDBY';
 }
 
-// ── Energy bar animation ──────────────────────────────
+// ── Energy bars ───────────────────────────────────────
 function animateEnergy(active) {
-  if (energyAnim) { clearInterval(energyAnim); energyAnim = null; }
-  const bars = Array.from({length:12}, (_,i) => document.getElementById('b'+i));
-  if (!active) {
-    bars.forEach(b => { if(b){ b.style.height='3px'; b.classList.remove('active'); } });
-    return;
-  }
-  energyAnim = setInterval(() => {
-    bars.forEach(b => {
-      if (!b) return;
-      const h = active ? (Math.random() * 18 + 4) : 3;
-      b.style.height = h + 'px';
-      b.classList.toggle('active', active && h > 8);
-    });
-  }, 120);
+  if(energyAnim){clearInterval(energyAnim);energyAnim=null;}
+  const bars=Array.from({length:12},(_,i)=>document.getElementById('b'+i));
+  if(!active){bars.forEach(b=>{if(b){b.style.height='3px';b.classList.remove('active');}});return;}
+  energyAnim=setInterval(()=>{bars.forEach(b=>{if(!b)return;const h=active?(Math.random()*18+4):3;b.style.height=h+'px';b.classList.toggle('active',h>8);});},120);
 }
 
-// ── Send text ─────────────────────────────────────────
+// ── Text send ─────────────────────────────────────────
 function sendText() {
-  const inp = document.getElementById('msgInput');
-  const text = inp.value.trim();
-  if (!text) return;
-  if (!connected) { addSys('RANI-এর সাথে connect করুন'); return; }
-  inp.value = '';
-  inp.style.height = 'auto';
-  addBubble('user', text);
-  ws.send(JSON.stringify({type:'text', text}));
+  const inp=document.getElementById('msgInput');
+  const text=inp.value.trim();
+  if(!text) return;
+  if(!connected){addSys('RANI-এর সাথে connect করুন');return;}
+  inp.value=''; inp.style.height='auto';
+  addBubble('user',text);
+  ws.send(JSON.stringify({type:'text',text}));
+}
+
+// ── Camera ────────────────────────────────────────────
+function openCamera() {
+  if(!connected){addSys('RANI-এর সাথে connect করুন');return;}
+  document.getElementById('cameraInput').click();
+}
+function openGallery() {
+  if(!connected){addSys('RANI-এর সাথে connect করুন');return;}
+  document.getElementById('galleryInput').click();
+}
+
+document.getElementById('cameraInput').addEventListener('change', function() {
+  if(this.files[0]) handleImageFile(this.files[0]);
+});
+document.getElementById('galleryInput').addEventListener('change', function() {
+  if(this.files[0]) handleImageFile(this.files[0]);
+});
+
+function handleImageFile(file) {
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const full=e.target.result;
+    const b64=full.split(',')[1];
+    const mime=file.type||'image/jpeg';
+    // Show preview in chat
+    const chat=document.getElementById('chat');
+    const div=document.createElement('div');
+    div.className='bubble user';
+    div.innerHTML=`<div class="bubble-name">You</div><img src="${full}" alt="photo"><br><small style="opacity:.6">${file.name||'image'}</small>`;
+    chat.appendChild(div);
+    chat.scrollTop=chat.scrollHeight;
+    // Send to RANI
+    ws.send(JSON.stringify({type:'image',data:b64,mime,caption:'এই ছবিটি দেখো এবং বিশ্লেষণ করো।'}));
+    addSys('ছবি পাঠানো হয়েছে...');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Location ──────────────────────────────────────────
+function sendLocation() {
+  if(!connected){addSys('RANI-এর সাথে connect করুন');return;}
+  addSys('📍 Location নেওয়া হচ্ছে...');
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    const {latitude:lat,longitude:lng,accuracy}=pos.coords;
+    addBubble('user',`📍 Location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    ws.send(JSON.stringify({type:'location',lat,lng}));
+  },(err)=>{
+    addSys('Location error: '+err.message);
+  },{enableHighAccuracy:true,timeout:10000});
 }
 
 // ── Mic ───────────────────────────────────────────────
 async function toggleMic() {
-  if (!connected) { addSys('RANI-এর সাথে connect করুন'); return; }
-  if (recording) stopMic(); else await startMic();
+  if(!connected){addSys('RANI-এর সাথে connect করুন');return;}
+  if(recording) stopMic(); else await startMic();
 }
 
 async function startMic() {
   try {
-    micStream = await navigator.mediaDevices.getUserMedia({
-      audio: { sampleRate:16000, channelCount:1, echoCancellation:true, noiseSuppression:true }
-    });
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-    const source = audioCtx.createMediaStreamSource(micStream);
-    scriptProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
-
-    scriptProcessor.onaudioprocess = (e) => {
-      if (!recording || !connected) return;
-      const floatData = e.inputBuffer.getChannelData(0);
-      const int16 = new Int16Array(floatData.length);
-      for (let i = 0; i < floatData.length; i++)
-        int16[i] = Math.max(-32768, Math.min(32767, floatData[i] * 32767));
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{sampleRate:16000,channelCount:1,echoCancellation:true,noiseSuppression:true}});
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+    const source=audioCtx.createMediaStreamSource(micStream);
+    scriptProcessor=audioCtx.createScriptProcessor(4096,1,1);
+    scriptProcessor.onaudioprocess=(e)=>{
+      if(!recording||!connected) return;
+      const floatData=e.inputBuffer.getChannelData(0);
+      const int16=new Int16Array(floatData.length);
+      for(let i=0;i<floatData.length;i++) int16[i]=Math.max(-32768,Math.min(32767,floatData[i]*32767));
       ws.send(int16.buffer);
     };
-
     source.connect(scriptProcessor);
     scriptProcessor.connect(audioCtx.destination);
-    recording = true;
-
-    const btn = document.getElementById('micBtn');
-    btn.textContent = '⏹';
-    btn.classList.add('recording');
-    setOrb('listening');
-    setStatus('listening', '🟢 Listening...');
+    recording=true;
+    document.getElementById('micBtn').textContent='⏹';
+    document.getElementById('micBtn').classList.add('recording');
+    setOrb('listening'); setStatus('listening','🟢 Listening...');
     animateEnergy(true);
     addSys('কথা বলুন...');
-  } catch (err) {
-    addSys('Mic error: ' + err.message);
-  }
+  } catch(err) { addSys('Mic error: '+err.message); }
 }
 
 function stopMic() {
-  recording = false;
-  if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
-  if (audioCtx) { audioCtx.close(); audioCtx = null; }
-  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-  const btn = document.getElementById('micBtn');
-  btn.textContent = '🎤';
-  btn.classList.remove('recording');
-  setOrb('standby');
-  setStatus('connected', '✓ Connected');
+  recording=false;
+  if(scriptProcessor){scriptProcessor.disconnect();scriptProcessor=null;}
+  if(audioCtx){audioCtx.close();audioCtx=null;}
+  if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+  document.getElementById('micBtn').textContent='🎤';
+  document.getElementById('micBtn').classList.remove('recording');
+  setOrb('standby'); setStatus('connected','✓ Connected');
   animateEnergy(false);
-  addSys('Voice stopped');
 }
 
 // ── Audio playback ─────────────────────────────────────
-const audioQueue = [];
-let isPlaying = false;
-
-function playAudioBuffer(arrayBuffer) {
-  audioQueue.push(arrayBuffer);
-  if (!isPlaying) processAudioQueue();
-}
-
-function processAudioQueue() {
-  if (audioQueue.length === 0) { isPlaying = false; return; }
-  isPlaying = true;
-  const buf = audioQueue.shift();
+function playAudioBuffer(buf) { audioQueue.push(buf); if(!isPlaying) processQueue(); }
+function processQueue() {
+  if(!audioQueue.length){isPlaying=false;return;}
+  isPlaying=true;
+  const buf=audioQueue.shift();
   try {
-    const int16 = new Int16Array(buf);
-    const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-    const audioBuf = ctx.createBuffer(1, int16.length, 24000);
-    const ch = audioBuf.getChannelData(0);
-    for (let i = 0; i < int16.length; i++) ch[i] = int16[i] / 32768.0;
-    const src = ctx.createBufferSource();
-    src.buffer = audioBuf;
-    src.connect(ctx.destination);
-    src.onended = () => { ctx.close(); processAudioQueue(); };
+    const int16=new Int16Array(buf);
+    const ctx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:24000});
+    const ab=ctx.createBuffer(1,int16.length,24000);
+    const ch=ab.getChannelData(0);
+    for(let i=0;i<int16.length;i++) ch[i]=int16[i]/32768.0;
+    const src=ctx.createBufferSource();
+    src.buffer=ab; src.connect(ctx.destination);
+    src.onended=()=>{ctx.close();processQueue();};
     src.start();
-    setOrb('speaking');
-    animateEnergy(true);
-  } catch(e) {
-    processAudioQueue();
-  }
+    setOrb('speaking'); animateEnergy(true);
+  } catch(e){processQueue();}
 }
 
 // ── Live text ─────────────────────────────────────────
-function showLive(text) {
-  const el = document.getElementById('liveTxt');
-  el.textContent = text;
-  el.classList.add('visible');
-}
-function hideLive() {
-  const el = document.getElementById('liveTxt');
-  el.textContent = '';
-  el.classList.remove('visible');
-}
+function showLive(text){const el=document.getElementById('liveTxt');el.textContent=text;el.classList.add('visible');}
+function hideLive(){const el=document.getElementById('liveTxt');el.textContent='';el.classList.remove('visible');if(isPlaying===false){setOrb('standby');animateEnergy(false);}}
 
-// ── Chat bubbles ──────────────────────────────────────
-function addBubble(who, text) {
-  const chat = document.getElementById('chat');
-  const div = document.createElement('div');
-  div.className = `bubble ${who}`;
-  const name = who === 'user' ? 'You' : 'RANI';
-  div.innerHTML = `<div class="bubble-name">${name}</div>${escHtml(text)}`;
+// ── Chat helpers ──────────────────────────────────────
+function addBubble(who,text) {
+  const chat=document.getElementById('chat');
+  const div=document.createElement('div');
+  div.className=`bubble ${who}`;
+  const name=who==='user'?'You':'RANI';
+  div.innerHTML=`<div class="bubble-name">${name}</div>${escHtml(text)}`;
+  if(who==='rani'){const cp=document.createElement('button');cp.className='copy-btn';cp.textContent='copy';cp.onclick=()=>navigator.clipboard.writeText(text).catch(()=>{});div.appendChild(cp);}
   chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop=chat.scrollHeight;
 }
+function addSys(text){const chat=document.getElementById('chat');const div=document.createElement('div');div.className='bubble sys';div.textContent=text;chat.appendChild(div);chat.scrollTop=chat.scrollHeight;}
+function clearChat(){document.getElementById('chat').innerHTML='';addSys('Chat cleared');}
+function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
 
-function addSys(text) {
-  const chat = document.getElementById('chat');
-  const div = document.createElement('div');
-  div.className = 'bubble sys';
-  div.textContent = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+// ── Utils ─────────────────────────────────────────────
+function base64ToAB(b64){const bin=atob(b64);const buf=new ArrayBuffer(bin.length);const v=new Uint8Array(buf);for(let i=0;i<bin.length;i++)v[i]=bin.charCodeAt(i);return buf;}
 
-function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-// ── Base64 ────────────────────────────────────────────
-function base64ToAB(b64) {
-  const bin = atob(b64);
-  const buf = new ArrayBuffer(bin.length);
-  const view = new Uint8Array(buf);
-  for (let i = 0; i < bin.length; i++) view[i] = bin.charCodeAt(i);
-  return buf;
-}
-
-// ── Auto-resize textarea ──────────────────────────────
-document.getElementById('msgInput').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 72) + 'px';
-});
+// Auto-resize textarea
+document.getElementById('msgInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,72)+'px';});
 </script>
 </body>
 </html>

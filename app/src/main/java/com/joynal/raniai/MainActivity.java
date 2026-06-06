@@ -13,7 +13,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.webkit.GeolocationPermissions;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -31,12 +33,14 @@ public class MainActivity extends Activity {
 
     private static final String GITHUB_RELEASE_API =
         "https://api.github.com/repos/devjoynal410/rani-mobile-app/releases/latest";
-    private static final int CURRENT_BUILD = 22;
-    private static final int REQ_AUDIO = 101;
+    private static final int CURRENT_BUILD = 24;
+    private static final int REQ_PERMISSIONS = 101;
+    private static final int FILE_CHOOSER_REQ = 102;
 
     private WebView webView;
     private long downloadId = -1;
     private DownloadManager downloadManager;
+    private ValueCallback<Uri[]> filePathCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +56,8 @@ public class MainActivity extends Activity {
         s.setAllowFileAccessFromFileURLs(true);
         s.setAllowUniversalAccessFromFileURLs(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        s.setGeolocationEnabled(true);
+        s.setAllowFileAccess(true);
 
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
@@ -59,19 +65,55 @@ public class MainActivity extends Activity {
             public void onPermissionRequest(PermissionRequest request) {
                 runOnUiThread(() -> request.grant(request.getResources()));
             }
+
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String origin,
+                    GeolocationPermissions.Callback callback) {
+                callback.invoke(origin, true, false);
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView wv,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams) {
+                if (MainActivity.this.filePathCallback != null) {
+                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                }
+                MainActivity.this.filePathCallback = filePathCallback;
+                Intent intent = fileChooserParams.createIntent();
+                try {
+                    startActivityForResult(intent, FILE_CHOOSER_REQ);
+                } catch (Exception e) {
+                    MainActivity.this.filePathCallback = null;
+                    return false;
+                }
+                return true;
+            }
         });
 
-        // Request mic permission at runtime
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_AUDIO);
-        }
+        requestPermissions(new String[]{
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.CAMERA,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        }, REQ_PERMISSIONS);
 
         webView.loadUrl("file:///android_asset/index.html");
 
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-
-        // Check for update after 5 seconds
         new Handler(Looper.getMainLooper()).postDelayed(this::checkUpdate, 5000);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CHOOSER_REQ) {
+            if (filePathCallback != null) {
+                Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+                filePathCallback.onReceiveValue(results);
+                filePathCallback = null;
+            }
+        }
     }
 
     private void checkUpdate() {
@@ -82,7 +124,6 @@ public class MainActivity extends Activity {
                 conn.setRequestProperty("User-Agent", "RANI-Mobile");
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(10000);
-
                 if (conn.getResponseCode() != 200) return;
 
                 BufferedReader reader = new BufferedReader(
@@ -113,10 +154,7 @@ public class MainActivity extends Activity {
                 final String finalUrl = apkUrl;
                 final int build = latestBuild;
                 runOnUiThread(() -> showUpdateDialog(build, finalUrl));
-
-            } catch (Exception e) {
-                // Silent — no internet or no release yet
-            }
+            } catch (Exception ignored) {}
         }).start();
     }
 
@@ -133,12 +171,11 @@ public class MainActivity extends Activity {
         try {
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
             request.setTitle("RANI AI Update");
-            request.setDescription("Downloading update...");
+            request.setDescription("Downloading...");
             request.setNotificationVisibility(
                 DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             request.setDestinationInExternalFilesDir(this, null, "RANI-AI-update.apk");
             request.setMimeType("application/vnd.android.package-archive");
-
             downloadId = downloadManager.enqueue(request);
             registerReceiver(downloadReceiver,
                 new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
@@ -153,9 +190,7 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-            if (id == downloadId) {
-                installApk();
-            }
+            if (id == downloadId) installApk();
         }
     };
 
