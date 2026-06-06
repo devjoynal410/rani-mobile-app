@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#050D1A"
+    android:gravity="center">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:id="@+id/splash_content">
+
+        <!-- Profile photo circle -->
+        <ImageView
+            android:id="@+id/splash_photo"
+            android:layout_width="130dp"
+            android:layout_height="130dp"
+            android:src="@drawable/profile_photo"
+            android:scaleType="centerCrop"
+            android:background="@drawable/circle_border"
+            android:padding="3dp"/>
+
+        <!-- Name -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Joynal Abdin"
+            android:textColor="#C8DCF0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="14dp"
+            android:letterSpacing="0.05"/>
+
+        <!-- RANI AI label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RANI AI"
+            android:textColor="#e8406a"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:layout_marginTop="6dp"
+            android:letterSpacing="0.2"/>
+
+        <!-- Subtitle -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Personal AI Assistant"
+            android:textColor="#2A4A6A"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp"
+            android:letterSpacing="0.1"/>
+
+    </LinearLayout>
+
+    <!-- Loading dots at bottom -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="40dp"
+        android:text="Loading..."
+        android:textColor="#1A3050"
+        android:textSize="12sp"
+        android:id="@+id/splash_loading"/>
+
+</RelativeLayout>
