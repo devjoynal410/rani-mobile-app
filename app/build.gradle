@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace "com.joynal.raniai"
     compileSdk 33
     defaultConfig {
         applicationId "com.joynal.raniai"
@@ -12,11 +13,11 @@ android {
         versionName "1.0.0"
     }
     buildTypes {
-        debug {
-            minifyEnabled false
-        }
-        release {
-            minifyEnabled false
-        }
+        debug { minifyEnabled false }
+        release { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
