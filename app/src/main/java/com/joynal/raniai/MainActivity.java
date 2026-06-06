@@ -1,4 +1,4 @@
-package com.joynal.raniai;
+﻿package com.joynal.raniai;
 
 import android.Manifest;
 import android.app.Activity;
@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
 
     private static final String GITHUB_API =
         "https://api.github.com/repos/devjoynal410/rani-mobile-app/releases/latest";
-    private static final int CURRENT_BUILD = 27;
+    private static final int CURRENT_BUILD = 30;
     private static final int FILE_REQ = 102;
 
     private WebView webView;
@@ -188,7 +188,7 @@ public class MainActivity extends Activity {
 
                 final String url2 = apkUrl;
                 final int build = latest;
-                // Auto-download silently — no dialog needed
+                // Auto-download silently â€” no dialog needed
                 runOnUiThread(() -> autoDownload(build, url2));
             } catch (Exception ignored) {}
         }).start();
@@ -199,7 +199,7 @@ public class MainActivity extends Activity {
         try {
             if (webView != null) {
                 webView.evaluateJavascript(
-                    "if(typeof addSys==='function') addSys('⬇️ নতুন version " + build + " download হচ্ছে...');", null);
+                    "if(typeof addSys==='function') addSys('â¬‡ï¸ à¦¨à¦¤à§à¦¨ version " + build + " download à¦¹à¦šà§à¦›à§‡...');", null);
             }
         } catch (Exception ignored) {}
         downloadApk(apkUrl);
@@ -237,9 +237,9 @@ public class MainActivity extends Activity {
             // Notify user in app
             if (webView != null) {
                 webView.evaluateJavascript(
-                    "if(typeof addSys==='function') addSys('✅ Download সম্পন্ন! Install করুন।');", null);
+                    "if(typeof addSys==='function') addSys('âœ… Download à¦¸à¦®à§à¦ªà¦¨à§à¦¨! Install à¦•à¦°à§à¦¨à¥¤');", null);
             }
-            // Auto-launch installer (user clicks Install once — Android security requirement)
+            // Auto-launch installer (user clicks Install once â€” Android security requirement)
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(uri, "application/vnd.android.package-archive");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -279,3 +279,4 @@ public class MainActivity extends Activity {
         }
     }
 }
+
