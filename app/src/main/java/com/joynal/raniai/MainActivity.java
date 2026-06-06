@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
 
     private static final String GITHUB_API =
         "https://api.github.com/repos/devjoynal410/rani-mobile-app/releases/latest";
-    private static final int CURRENT_BUILD = 26;
+    private static final int CURRENT_BUILD = 27;
     private static final int FILE_REQ = 102;
 
     private WebView webView;
@@ -188,20 +188,21 @@ public class MainActivity extends Activity {
 
                 final String url2 = apkUrl;
                 final int build = latest;
-                runOnUiThread(() -> showUpdateDialog(build, url2));
+                // Auto-download silently — no dialog needed
+                runOnUiThread(() -> autoDownload(build, url2));
             } catch (Exception ignored) {}
         }).start();
     }
 
-    private void showUpdateDialog(int build, String apkUrl) {
+    private void autoDownload(int build, String apkUrl) {
+        // Show WebView notification silently, then auto-download
         try {
-            new AlertDialog.Builder(this)
-                .setTitle("নতুন আপডেট!")
-                .setMessage("RANI AI Build " + build + " পাওয়া গেছে।")
-                .setPositiveButton("Install", (d, w) -> downloadApk(apkUrl))
-                .setNegativeButton("পরে", null)
-                .show();
+            if (webView != null) {
+                webView.evaluateJavascript(
+                    "if(typeof addSys==='function') addSys('⬇️ নতুন version " + build + " download হচ্ছে...');", null);
+            }
         } catch (Exception ignored) {}
+        downloadApk(apkUrl);
     }
 
     private void downloadApk(String apkUrl) {
@@ -233,6 +234,12 @@ public class MainActivity extends Activity {
         try {
             Uri uri = dm.getUriForDownloadedFile(downloadId);
             if (uri == null) return;
+            // Notify user in app
+            if (webView != null) {
+                webView.evaluateJavascript(
+                    "if(typeof addSys==='function') addSys('✅ Download সম্পন্ন! Install করুন।');", null);
+            }
+            // Auto-launch installer (user clicks Install once — Android security requirement)
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(uri, "application/vnd.android.package-archive");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
