@@ -28,23 +28,26 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           gradle :app:assembleDebug --stacktrace 2>&1 | tail -50
 
-      - name: Show APK info
+      - name: Rename APK
         run: |
-          APK=$(find app/build/outputs/apk -name "*.apk" | head -1)
-          echo "APK: $APK"
-          ls -lh $APK
+          mkdir -p release
+          cp app/build/outputs/apk/debug/app-debug.apk release/RANI-AI.apk
+          ls -lh release/RANI-AI.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: RANI-AI-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: release/RANI-AI.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: "RANI AI — Build ${{ github.run_number }}"
-          body: "Download করে phone-এ install করুন।"
-          files: app/build/outputs/apk/debug/*.apk
+          body: |
+            ## RANI AI Mobile App
+
+            👇 **নিচের link থেকে APK download করুন:**
+          files: release/RANI-AI.apk
           make_latest: true
