@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.webkit.GeolocationPermissions;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -31,164 +32,198 @@ import java.net.URL;
 
 public class MainActivity extends Activity {
 
-    private static final String GITHUB_RELEASE_API =
+    private static final String GITHUB_API =
         "https://api.github.com/repos/devjoynal410/rani-mobile-app/releases/latest";
-    private static final int CURRENT_BUILD = 24;
-    private static final int REQ_PERMISSIONS = 101;
-    private static final int FILE_CHOOSER_REQ = 102;
+    private static final int CURRENT_BUILD = 26;
+    private static final int FILE_REQ = 102;
 
     private WebView webView;
+    private ValueCallback<Uri[]> fileCallback;
     private long downloadId = -1;
-    private DownloadManager downloadManager;
-    private ValueCallback<Uri[]> filePathCallback;
+    private DownloadManager dm;
+    private boolean receiverRegistered = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        try {
+            setContentView(R.layout.activity_main);
+            setupWebView();
+            dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            new Handler(Looper.getMainLooper()).postDelayed(this::requestPerms, 1500);
+            new Handler(Looper.getMainLooper()).postDelayed(this::checkUpdate, 6000);
+        } catch (Exception e) {
+            showError("Startup error: " + e.getMessage());
+        }
+    }
+
+    private void setupWebView() {
         webView = findViewById(R.id.webview);
 
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setMediaPlaybackRequiresUserGesture(false);
-        s.setDomStorageEnabled(true);
-        s.setAllowFileAccessFromFileURLs(true);
-        s.setAllowUniversalAccessFromFileURLs(true);
-        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        s.setGeolocationEnabled(true);
-        s.setAllowFileAccess(true);
+        WebSettings ws = webView.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setDomStorageEnabled(true);
+        ws.setMediaPlaybackRequiresUserGesture(false);
+        ws.setAllowFileAccessFromFileURLs(true);
+        ws.setAllowUniversalAccessFromFileURLs(true);
+        ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        ws.setGeolocationEnabled(true);
+        ws.setAllowFileAccess(true);
+        ws.setDatabaseEnabled(true);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, int errorCode,
+                    String description, String failingUrl) {
+                // Ignore file:// errors
+            }
+        });
+
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
-                runOnUiThread(() -> request.grant(request.getResources()));
+                runOnUiThread(() -> {
+                    try { request.grant(request.getResources()); }
+                    catch (Exception ignored) {}
+                });
             }
 
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin,
                     GeolocationPermissions.Callback callback) {
-                callback.invoke(origin, true, false);
+                try { callback.invoke(origin, true, false); }
+                catch (Exception ignored) {}
             }
 
             @Override
             public boolean onShowFileChooser(WebView wv,
-                    ValueCallback<Uri[]> filePathCallback,
-                    FileChooserParams fileChooserParams) {
-                if (MainActivity.this.filePathCallback != null) {
-                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                    ValueCallback<Uri[]> cb,
+                    FileChooserParams params) {
+                if (fileCallback != null) {
+                    fileCallback.onReceiveValue(null);
+                    fileCallback = null;
                 }
-                MainActivity.this.filePathCallback = filePathCallback;
-                Intent intent = fileChooserParams.createIntent();
+                fileCallback = cb;
                 try {
-                    startActivityForResult(intent, FILE_CHOOSER_REQ);
+                    Intent intent = params.createIntent();
+                    startActivityForResult(intent, FILE_REQ);
+                    return true;
                 } catch (Exception e) {
-                    MainActivity.this.filePathCallback = null;
+                    fileCallback = null;
                     return false;
                 }
-                return true;
             }
         });
 
-        requestPermissions(new String[]{
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        }, REQ_PERMISSIONS);
-
         webView.loadUrl("file:///android_asset/index.html");
+    }
 
-        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        new Handler(Looper.getMainLooper()).postDelayed(this::checkUpdate, 5000);
+    private void requestPerms() {
+        try {
+            String[] perms = {
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            };
+            boolean needRequest = false;
+            for (String p : perms) {
+                if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                    needRequest = true;
+                    break;
+                }
+            }
+            if (needRequest) requestPermissions(perms, 101);
+        } catch (Exception ignored) {}
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILE_CHOOSER_REQ) {
-            if (filePathCallback != null) {
-                Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
-                filePathCallback.onReceiveValue(results);
-                filePathCallback = null;
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req == FILE_REQ && fileCallback != null) {
+            try {
+                Uri[] results = WebChromeClient.FileChooserParams.parseResult(res, data);
+                fileCallback.onReceiveValue(results);
+            } catch (Exception e) {
+                fileCallback.onReceiveValue(null);
             }
+            fileCallback = null;
         }
     }
 
     private void checkUpdate() {
         new Thread(() -> {
             try {
-                URL url = new URL(GITHUB_RELEASE_API);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestProperty("User-Agent", "RANI-Mobile");
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-                if (conn.getResponseCode() != 200) return;
+                URL url = new URL(GITHUB_API);
+                HttpURLConnection c = (HttpURLConnection) url.openConnection();
+                c.setRequestProperty("User-Agent", "RANI-Mobile");
+                c.setConnectTimeout(8000);
+                c.setReadTimeout(8000);
+                if (c.getResponseCode() != 200) return;
 
-                BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(conn.getInputStream()));
                 StringBuilder sb = new StringBuilder();
+                BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
                 String line;
-                while ((line = reader.readLine()) != null) sb.append(line);
-                reader.close();
+                while ((line = br.readLine()) != null) sb.append(line);
+                br.close();
 
                 JSONObject json = new JSONObject(sb.toString());
-                String tagName = json.optString("tag_name", "");
-                if (!tagName.startsWith("build-")) return;
+                String tag = json.optString("tag_name", "");
+                if (!tag.startsWith("build-")) return;
 
-                int latestBuild = Integer.parseInt(tagName.replace("build-", "").trim());
-                if (latestBuild <= CURRENT_BUILD) return;
+                int latest = Integer.parseInt(tag.replace("build-", "").trim());
+                if (latest <= CURRENT_BUILD) return;
 
                 JSONArray assets = json.getJSONArray("assets");
                 String apkUrl = null;
                 for (int i = 0; i < assets.length(); i++) {
-                    JSONObject asset = assets.getJSONObject(i);
-                    if (asset.getString("name").endsWith(".apk")) {
-                        apkUrl = asset.getString("browser_download_url");
+                    JSONObject a = assets.getJSONObject(i);
+                    if (a.getString("name").endsWith(".apk")) {
+                        apkUrl = a.getString("browser_download_url");
                         break;
                     }
                 }
                 if (apkUrl == null) return;
 
-                final String finalUrl = apkUrl;
-                final int build = latestBuild;
-                runOnUiThread(() -> showUpdateDialog(build, finalUrl));
+                final String url2 = apkUrl;
+                final int build = latest;
+                runOnUiThread(() -> showUpdateDialog(build, url2));
             } catch (Exception ignored) {}
         }).start();
     }
 
     private void showUpdateDialog(int build, String apkUrl) {
-        new AlertDialog.Builder(this)
-            .setTitle("নতুন আপডেট!")
-            .setMessage("RANI AI Build " + build + " পাওয়া গেছে।\nএখনই install করবেন?")
-            .setPositiveButton("Install", (d, w) -> downloadApk(apkUrl))
-            .setNegativeButton("পরে", null)
-            .show();
+        try {
+            new AlertDialog.Builder(this)
+                .setTitle("নতুন আপডেট!")
+                .setMessage("RANI AI Build " + build + " পাওয়া গেছে।")
+                .setPositiveButton("Install", (d, w) -> downloadApk(apkUrl))
+                .setNegativeButton("পরে", null)
+                .show();
+        } catch (Exception ignored) {}
     }
 
     private void downloadApk(String apkUrl) {
         try {
-            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
-            request.setTitle("RANI AI Update");
-            request.setDescription("Downloading...");
-            request.setNotificationVisibility(
+            DownloadManager.Request req = new DownloadManager.Request(Uri.parse(apkUrl));
+            req.setTitle("RANI AI Update");
+            req.setNotificationVisibility(
                 DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalFilesDir(this, null, "RANI-AI-update.apk");
-            request.setMimeType("application/vnd.android.package-archive");
-            downloadId = downloadManager.enqueue(request);
-            registerReceiver(downloadReceiver,
-                new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+            req.setDestinationInExternalFilesDir(this, null, "RANI-update.apk");
+            req.setMimeType("application/vnd.android.package-archive");
+            downloadId = dm.enqueue(req);
+            IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+            registerReceiver(dlReceiver, filter);
+            receiverRegistered = true;
         } catch (Exception e) {
-            new AlertDialog.Builder(this)
-                .setMessage("Download failed: " + e.getMessage())
-                .setPositiveButton("OK", null).show();
+            showError("Download error: " + e.getMessage());
         }
     }
 
-    private final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver dlReceiver = new BroadcastReceiver() {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context ctx, Intent intent) {
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             if (id == downloadId) installApk();
         }
@@ -196,29 +231,44 @@ public class MainActivity extends Activity {
 
     private void installApk() {
         try {
-            Uri apkUri = downloadManager.getUriForDownloadedFile(downloadId);
-            if (apkUri == null) return;
+            Uri uri = dm.getUriForDownloadedFile(downloadId);
+            if (uri == null) return;
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setDataAndType(uri, "application/vnd.android.package-archive");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } catch (Exception e) {
-            new AlertDialog.Builder(this)
-                .setMessage("Install failed: " + e.getMessage())
-                .setPositiveButton("OK", null).show();
+            showError("Install error: " + e.getMessage());
         }
+    }
+
+    private void showError(String msg) {
+        try {
+            runOnUiThread(() ->
+                new AlertDialog.Builder(this)
+                    .setTitle("Error")
+                    .setMessage(msg)
+                    .setPositiveButton("OK", null)
+                    .show());
+        } catch (Exception ignored) {}
     }
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        try {
+            if (webView != null && webView.canGoBack()) webView.goBack();
+            else super.onBackPressed();
+        } catch (Exception ignored) { super.onBackPressed(); }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        try { unregisterReceiver(downloadReceiver); } catch (Exception ignored) {}
+        if (receiverRegistered) {
+            try { unregisterReceiver(dlReceiver); } catch (Exception ignored) {}
+        }
+        if (webView != null) {
+            try { webView.destroy(); } catch (Exception ignored) {}
+        }
     }
 }

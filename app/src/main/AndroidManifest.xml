@@ -16,7 +16,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="RANI AI"
-        android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+        android:theme="@style/RANITheme"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true">
 
