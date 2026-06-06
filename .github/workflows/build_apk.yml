@@ -10,31 +10,36 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-java@v4
         with:
-          python-version: '3.9'
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Install deps
-        run: |
-          sudo apt update
-          sudo apt install -y openjdk-11-jdk zip unzip
-          pip install cython==0.29.33 buildozer
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Cache
-        uses: actions/cache@v3
+      - name: Grant gradlew permission
+        run: chmod +x gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.buildozer
-          key: bz-${{ hashFiles('buildozer.spec') }}
+          name: RANI-AI-APK
+          path: app/build/outputs/apk/debug/*.apk
 
-      - name: Build
-        run: buildozer android debug
-
-      - name: Upload
-        uses: actions/upload-artifact@v3
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: RANI-APK
-          path: bin/*.apk
+          tag_name: build-${{ github.run_number }}
+          name: "RANI AI — Build ${{ github.run_number }}"
+          body: "Download করে phone-এ install করুন।"
+          files: app/build/outputs/apk/debug/*.apk
+          make_latest: true

@@ -1,0 +1,22 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 33
+    defaultConfig {
+        applicationId "com.joynal.raniai"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0.0"
+    }
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+}
