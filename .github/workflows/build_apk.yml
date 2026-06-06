@@ -31,7 +31,9 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p release
-          cp app/build/outputs/apk/debug/app-debug.apk release/RANI-AI.apk
+          find app/build/outputs -name "*.apk" -exec ls -lh {} \;
+          APK=$(find app/build/outputs -name "*.apk" | head -1)
+          cp "$APK" release/RANI-AI.apk
           ls -lh release/RANI-AI.apk
 
       - name: Upload APK artifact
