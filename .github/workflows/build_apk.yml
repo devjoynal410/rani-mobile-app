@@ -23,15 +23,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version=8.0
-          chmod +x gradlew
-
       - name: Build APK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          ./gradlew :app:assembleDebug --stacktrace
+          gradle :app:assembleDebug --stacktrace 2>&1 | tail -50
 
       - name: Show APK info
         run: |
