@@ -16,50 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
+      - name: Build APK (Docker buildozer)
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          python-version: "3.10"
-
-      - name: Install system packages
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            git zip unzip \
-            openjdk-17-jdk \
-            build-essential \
-            autoconf libtool \
-            pkg-config \
-            libffi-dev libssl-dev \
-            zlib1g-dev \
-            libncurses5-dev \
-            libsqlite3-dev \
-            ccache
-
-      - name: Install buildozer & cython
-        run: |
-          pip install --upgrade pip
-          pip install buildozer==1.5.0 cython==0.29.36
-
-      - name: Cache buildozer downloads
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildozer
-          key: bz-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
-          restore-keys: bz-${{ runner.os }}-
-
-      - name: Build APK
-        env:
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-        run: |
-          buildozer android debug
-
-      - name: Find APK
-        id: apk
-        run: |
-          APK=$(ls bin/*.apk 2>/dev/null | head -1)
-          echo "path=$APK" >> $GITHUB_OUTPUT
-          echo "name=$(basename $APK)" >> $GITHUB_OUTPUT
+          command: android debug
+          workdir: .
+          buildozer_version: stable
 
       - name: Get version
         id: ver
@@ -68,23 +31,21 @@ jobs:
           echo "version=$V" >> $GITHUB_OUTPUT
           echo "tag=v${V}-b${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: Upload as Artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: RANI-AI-APK
-          path: ${{ steps.apk.outputs.path }}
+          path: ${{ steps.buildozer.outputs.filename }}
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: "RANI AI v${{ steps.ver.outputs.version }} — Build ${{ github.run_number }}"
           body: |
             ### RANI AI Mobile App — Auto Build
-
             **এই APK download করে phone-এ install করুন।**
-
             - Build: ${{ github.run_number }}
             - Commit: ${{ github.sha }}
-          files: ${{ steps.apk.outputs.path }}
+          files: ${{ steps.buildozer.outputs.filename }}
           make_latest: true
