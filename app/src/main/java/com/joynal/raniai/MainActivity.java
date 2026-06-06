@@ -1,8 +1,7 @@
-﻿package com.joynal.raniai;
+package com.joynal.raniai;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,13 +13,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.webkit.GeolocationPermissions;
-import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,7 +33,7 @@ public class MainActivity extends Activity {
 
     private static final String GITHUB_API =
         "https://api.github.com/repos/devjoynal410/rani-mobile-app/releases/latest";
-    private static final int CURRENT_BUILD = 30;
+    private static final int CURRENT_BUILD = 31;
     private static final int FILE_REQ = 102;
 
     private WebView webView;
@@ -46,15 +45,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         try {
             setContentView(R.layout.activity_main);
             setupWebView();
             dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             new Handler(Looper.getMainLooper()).postDelayed(this::requestPerms, 1500);
-            new Handler(Looper.getMainLooper()).postDelayed(this::checkUpdate, 6000);
+            new Handler(Looper.getMainLooper()).postDelayed(this::checkUpdate, 8000);
         } catch (Exception e) {
-            showError("Startup error: " + e.getMessage());
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -76,7 +74,7 @@ public class MainActivity extends Activity {
             @Override
             public void onReceivedError(WebView view, int errorCode,
                     String description, String failingUrl) {
-                // Ignore file:// errors
+                // Suppress file:// asset errors
             }
         });
 
@@ -106,8 +104,7 @@ public class MainActivity extends Activity {
                 }
                 fileCallback = cb;
                 try {
-                    Intent intent = params.createIntent();
-                    startActivityForResult(intent, FILE_REQ);
+                    startActivityForResult(params.createIntent(), FILE_REQ);
                     return true;
                 } catch (Exception e) {
                     fileCallback = null;
@@ -127,14 +124,10 @@ public class MainActivity extends Activity {
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.READ_EXTERNAL_STORAGE
             };
-            boolean needRequest = false;
-            for (String p : perms) {
-                if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-                    needRequest = true;
-                    break;
-                }
-            }
-            if (needRequest) requestPermissions(perms, 101);
+            boolean need = false;
+            for (String p : perms)
+                if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) { need = true; break; }
+            if (need) requestPermissions(perms, 101);
         } catch (Exception ignored) {}
     }
 
@@ -143,8 +136,8 @@ public class MainActivity extends Activity {
         super.onActivityResult(req, res, data);
         if (req == FILE_REQ && fileCallback != null) {
             try {
-                Uri[] results = WebChromeClient.FileChooserParams.parseResult(res, data);
-                fileCallback.onReceiveValue(results);
+                fileCallback.onReceiveValue(
+                    WebChromeClient.FileChooserParams.parseResult(res, data));
             } catch (Exception e) {
                 fileCallback.onReceiveValue(null);
             }
@@ -152,6 +145,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    // ── Auto-update (fully background, no dialogs) ────────────────────────────
     private void checkUpdate() {
         new Thread(() -> {
             try {
@@ -186,40 +180,35 @@ public class MainActivity extends Activity {
                 }
                 if (apkUrl == null) return;
 
-                final String url2 = apkUrl;
+                final String finalUrl = apkUrl;
                 final int build = latest;
-                // Auto-download silently â€” no dialog needed
-                runOnUiThread(() -> autoDownload(build, url2));
+                // Auto-download silently — no dialog, no user prompt
+                runOnUiThread(() -> {
+                    try {
+                        Toast.makeText(MainActivity.this,
+                            "RANI AI update downloading...", Toast.LENGTH_SHORT).show();
+                    } catch (Exception ignored) {}
+                    downloadApk(finalUrl);
+                });
             } catch (Exception ignored) {}
         }).start();
-    }
-
-    private void autoDownload(int build, String apkUrl) {
-        // Show WebView notification silently, then auto-download
-        try {
-            if (webView != null) {
-                webView.evaluateJavascript(
-                    "if(typeof addSys==='function') addSys('â¬‡ï¸ à¦¨à¦¤à§à¦¨ version " + build + " download à¦¹à¦šà§à¦›à§‡...');", null);
-            }
-        } catch (Exception ignored) {}
-        downloadApk(apkUrl);
     }
 
     private void downloadApk(String apkUrl) {
         try {
             DownloadManager.Request req = new DownloadManager.Request(Uri.parse(apkUrl));
             req.setTitle("RANI AI Update");
+            req.setDescription("Installing update in background...");
+            // Silent download — notify only when complete (tap to install)
             req.setNotificationVisibility(
                 DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             req.setDestinationInExternalFilesDir(this, null, "RANI-update.apk");
             req.setMimeType("application/vnd.android.package-archive");
             downloadId = dm.enqueue(req);
-            IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-            registerReceiver(dlReceiver, filter);
+            registerReceiver(dlReceiver,
+                new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
             receiverRegistered = true;
-        } catch (Exception e) {
-            showError("Download error: " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
     }
 
     private final BroadcastReceiver dlReceiver = new BroadcastReceiver() {
@@ -234,29 +223,10 @@ public class MainActivity extends Activity {
         try {
             Uri uri = dm.getUriForDownloadedFile(downloadId);
             if (uri == null) return;
-            // Notify user in app
-            if (webView != null) {
-                webView.evaluateJavascript(
-                    "if(typeof addSys==='function') addSys('âœ… Download à¦¸à¦®à§à¦ªà¦¨à§à¦¨! Install à¦•à¦°à§à¦¨à¥¤');", null);
-            }
-            // Auto-launch installer (user clicks Install once â€” Android security requirement)
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(uri, "application/vnd.android.package-archive");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-        } catch (Exception e) {
-            showError("Install error: " + e.getMessage());
-        }
-    }
-
-    private void showError(String msg) {
-        try {
-            runOnUiThread(() ->
-                new AlertDialog.Builder(this)
-                    .setTitle("Error")
-                    .setMessage(msg)
-                    .setPositiveButton("OK", null)
-                    .show());
         } catch (Exception ignored) {}
     }
 
@@ -271,12 +241,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (receiverRegistered) {
-            try { unregisterReceiver(dlReceiver); } catch (Exception ignored) {}
-        }
-        if (webView != null) {
-            try { webView.destroy(); } catch (Exception ignored) {}
-        }
+        if (receiverRegistered) try { unregisterReceiver(dlReceiver); } catch (Exception ignored) {}
+        if (webView != null) try { webView.destroy(); } catch (Exception ignored) {}
     }
 }
-

@@ -22,6 +22,7 @@ body { background:#050D1A; color:#C8DCF0; font-family:'Segoe UI',Arial,sans-seri
 .status-dot.thinking  { background:#f5c518; box-shadow:0 0 6px #f5c518; animation:pulse 1.2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 .btn-settings { background:none; border:none; color:#2A4A6A; font-size:18px; cursor:pointer; padding:4px; }
+.owner-photo { width:38px; height:38px; border-radius:50%; border:2px solid #e8406a; object-fit:cover; flex-shrink:0; }
 
 /* Connect bar */
 .connect-bar { display:flex; gap:8px; padding:8px 14px; background:#040C18; border-bottom:1px solid rgba(0,90,180,.15); flex-shrink:0; }
@@ -118,9 +119,10 @@ body { background:#050D1A; color:#C8DCF0; font-family:'Segoe UI',Arial,sans-seri
 
 <!-- Header -->
 <div class="header">
+  <img src="profile.png" class="owner-photo" alt="Joynal">
   <div class="header-info">
     <div class="logo">RANI</div>
-    <div class="header-sub">AI Assistant</div>
+    <div class="header-sub">Joynal Abdin's AI</div>
   </div>
   <div class="status-pill">
     <div class="status-dot" id="dot"></div>
@@ -208,7 +210,15 @@ function connect() {
   document.getElementById('connectBtn').textContent = '...';
   document.getElementById('connectBtn').className = 'btn-connect';
 
-  ws = new WebSocket(`ws://${ip}:${port}`);
+  try {
+    ws = new WebSocket(`ws://${ip}:${port}`);
+  } catch(err) {
+    setStatus('error', 'WebSocket error: ' + err.message);
+    document.getElementById('connectBtn').textContent='Connect';
+    document.getElementById('connectBtn').className='btn-connect';
+    addSys('Connection failed: ' + err.message);
+    return;
+  }
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
