@@ -25,9 +25,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
-            git zip unzip \
+            git zip unzip curl \
             openjdk-17-jdk \
-            autoconf libtool \
+            autoconf automake libtool \
             pkg-config \
             zlib1g-dev \
             libncurses5-dev libncursesw5-dev \
@@ -35,12 +35,23 @@ jobs:
             libffi-dev \
             libssl-dev \
             libbz2-dev \
-            libsqlite3-dev
+            libsqlite3-dev \
+            portaudio19-dev \
+            python3-dev \
+            ccache \
+            lld
+          # libtinfo5 fix for Ubuntu 22
+          sudo apt-get install -y libtinfo5 || true
+
+      - name: Set up Java 17
+        run: |
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+          java -version
 
       - name: Install Python build tools
         run: |
-          pip install --upgrade pip
-          pip install buildozer cython virtualenv
+          pip install --upgrade pip setuptools wheel
+          pip install buildozer==1.5.0 cython==0.29.36 virtualenv
 
       - name: Cache buildozer global dir
         uses: actions/cache@v4

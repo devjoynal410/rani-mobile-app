@@ -294,45 +294,97 @@ class RaniApp(App):
 
     def _mic_loop(self):
         try:
-            import pyaudio
-            CHUNK = 1024
-            pa = pyaudio.PyAudio()
-            stream = pa.open(
-                format=pyaudio.paInt16, channels=1,
-                rate=16000, input=True, frames_per_buffer=CHUNK,
-            )
-            while self._recording:
-                data = stream.read(CHUNK, exception_on_overflow=False)
-                if self._ws and self._connected:
-                    b64 = base64.b64encode(data).decode()
-                    try:
-                        self._ws.send(json.dumps({"type": "audio", "data": b64}))
-                    except Exception:
-                        break
-            stream.stop_stream()
-            stream.close()
-            pa.terminate()
+            if IS_ANDROID:
+                self._mic_loop_android()
+            else:
+                self._mic_loop_desktop()
         except Exception as e:
             Clock.schedule_once(
                 lambda dt, err=e: self._add_sys(f"Mic: {err}"), 0)
         finally:
             Clock.schedule_once(lambda dt: self._stop_mic(), 0)
 
+    def _mic_loop_android(self):
+        AudioRecord  = autoclass("android.media.AudioRecord")
+        AudioFormat  = autoclass("android.media.AudioFormat")
+        AudioSource  = autoclass("android.media.MediaRecorder$AudioSource")
+        SAMPLE_RATE  = 16000
+        CHANNEL      = AudioFormat.CHANNEL_IN_MONO
+        ENCODING     = AudioFormat.ENCODING_PCM_16BIT
+        buf_size     = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, ENCODING)
+        recorder     = AudioRecord(AudioSource.MIC, SAMPLE_RATE,
+                                   CHANNEL, ENCODING, buf_size)
+        buf = bytearray(buf_size)
+        recorder.startRecording()
+        while self._recording:
+            n = recorder.read(buf, 0, buf_size)
+            if n > 0 and self._ws and self._connected:
+                data = bytes(buf[:n])
+                b64  = base64.b64encode(data).decode()
+                try:
+                    self._ws.send(json.dumps({"type": "audio", "data": b64}))
+                except Exception:
+                    break
+        recorder.stop()
+        recorder.release()
+
+    def _mic_loop_desktop(self):
+        try:
+            import pyaudio
+        except ImportError:
+            self._add_sys("pyaudio not available on desktop test")
+            return
+        CHUNK = 1024
+        pa    = pyaudio.PyAudio()
+        stream = pa.open(format=pyaudio.paInt16, channels=1,
+                         rate=16000, input=True, frames_per_buffer=CHUNK)
+        while self._recording:
+            data = stream.read(CHUNK, exception_on_overflow=False)
+            if self._ws and self._connected:
+                b64 = base64.b64encode(data).decode()
+                try:
+                    self._ws.send(json.dumps({"type": "audio", "data": b64}))
+                except Exception:
+                    break
+        stream.stop_stream(); stream.close(); pa.terminate()
+
     # ── Audio playback ────────────────────────────────────────────
 
     def _play_audio(self, data_b64):
         try:
-            import pyaudio
             raw = base64.b64decode(data_b64)
-            pa  = pyaudio.PyAudio()
-            st  = pa.open(format=pyaudio.paInt16, channels=1,
-                          rate=16000, output=True)
-            st.write(raw)
-            st.stop_stream()
-            st.close()
-            pa.terminate()
+            if IS_ANDROID:
+                self._play_audio_android(raw)
+            else:
+                self._play_audio_desktop(raw)
         except Exception as e:
             print(f"[AudioPlay] {e}")
+
+    def _play_audio_android(self, raw: bytes):
+        AudioTrack  = autoclass("android.media.AudioTrack")
+        AudioFormat = autoclass("android.media.AudioFormat")
+        AudioMgr    = autoclass("android.media.AudioManager")
+        track = AudioTrack(
+            AudioMgr.STREAM_MUSIC,
+            16000,
+            AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            len(raw),
+            AudioTrack.MODE_STATIC,
+        )
+        track.write(raw, 0, len(raw))
+        track.play()
+
+    def _play_audio_desktop(self, raw: bytes):
+        try:
+            import pyaudio
+            pa = pyaudio.PyAudio()
+            st = pa.open(format=pyaudio.paInt16, channels=1,
+                         rate=16000, output=True)
+            st.write(raw)
+            st.stop_stream(); st.close(); pa.terminate()
+        except Exception as e:
+            print(f"[AudioPlay desktop] {e}")
 
     # ── Auto Update ───────────────────────────────────────────────
 
