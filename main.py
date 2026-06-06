@@ -3,11 +3,13 @@
 RANI AI Mobile App
 ==================
 PC-তে চলা RANI-এর সাথে Voice + Text-এ কথা বলার Android app।
+Auto-update: GitHub Releases থেকে নতুন APK নিজেই install করে।
 """
 
 import threading
 import base64
 import json
+import os
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -15,17 +17,23 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.popup import Popup
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
 
 try:
     from android.permissions import request_permissions, Permission
+    from android import mActivity
+    from jnius import autoclass
     IS_ANDROID = True
 except ImportError:
     IS_ANDROID = False
 
 PORT = 8765
+CURRENT_VERSION = "1.0.0"
+GITHUB_REPO     = "devjoynal410/rani-mobile-app"
+GITHUB_API_URL  = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
 # ── Colors ──────────────────────────────────────────────────────
 BG    = (0.02, 0.03, 0.06, 1)
@@ -120,6 +128,20 @@ class RaniApp(App):
         bot.add_widget(self._sbtn)
         bot.add_widget(self._mbtn)
         root.add_widget(bot)
+
+        # ── Update banner (hidden by default) ───────────────────
+        self._update_bar = Button(
+            text="", size_hint_y=None, height=dp(0),
+            background_color=[0.1, 0.5, 0.2, 1],
+            font_size=dp(12), color=TEXT,
+        )
+        self._update_bar.bind(on_press=self._do_update)
+        root.add_widget(self._update_bar)
+        self._update_apk_url = ""
+
+        # Check for update after 3 seconds
+        Clock.schedule_once(lambda dt: threading.Thread(
+            target=self._check_update, daemon=True).start(), 3)
 
         return root
 
@@ -311,6 +333,117 @@ class RaniApp(App):
             pa.terminate()
         except Exception as e:
             print(f"[AudioPlay] {e}")
+
+    # ── Auto Update ───────────────────────────────────────────────
+
+    def _check_update(self):
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                GITHUB_API_URL,
+                headers={"User-Agent": "RANI-Mobile/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.loads(r.read().decode())
+
+            latest_tag  = data.get("tag_name", "")
+            latest_ver  = latest_tag.split("-")[0].lstrip("v")  # "v1.2.0-build5" → "1.2.0"
+            assets      = data.get("assets", [])
+            apk_asset   = next((a for a in assets if a["name"].endswith(".apk")), None)
+
+            if not apk_asset:
+                return
+
+            if self._is_newer(latest_ver, CURRENT_VERSION):
+                apk_url = apk_asset["browser_download_url"]
+                Clock.schedule_once(
+                    lambda dt, v=latest_ver, u=apk_url: self._show_update_bar(v, u), 0)
+        except Exception as e:
+            print(f"[Update] Check failed: {e}")
+
+    def _is_newer(self, latest: str, current: str) -> bool:
+        try:
+            def parts(v): return [int(x) for x in v.strip().split(".")]
+            return parts(latest) > parts(current)
+        except Exception:
+            return False
+
+    def _show_update_bar(self, version: str, apk_url: str):
+        self._update_apk_url = apk_url
+        self._update_bar.text   = f"🔄  New update v{version} available — Tap to install!"
+        self._update_bar.height = dp(40)
+
+    def _do_update(self, *_):
+        if not self._update_apk_url:
+            return
+        self._update_bar.text = "⬇️  Downloading update..."
+        threading.Thread(target=self._download_and_install,
+                         args=(self._update_apk_url,), daemon=True).start()
+
+    def _download_and_install(self, url: str):
+        try:
+            import urllib.request
+            from pathlib import Path
+
+            # Download APK
+            apk_path = Path("/sdcard/Download/RANI-AI-update.apk")
+            if IS_ANDROID:
+                apk_path = Path("/sdcard/Download/RANI-AI-update.apk")
+            else:
+                apk_path = Path.home() / "Downloads" / "RANI-AI-update.apk"
+
+            Clock.schedule_once(
+                lambda dt: setattr(self._update_bar, "text",
+                                   "⬇️  Downloading... please wait"), 0)
+
+            urllib.request.urlretrieve(url, str(apk_path))
+
+            if IS_ANDROID:
+                self._install_apk_android(str(apk_path))
+            else:
+                Clock.schedule_once(
+                    lambda dt: setattr(self._update_bar, "text",
+                                       f"✅ Downloaded: {apk_path}"), 0)
+
+        except Exception as e:
+            Clock.schedule_once(
+                lambda dt, err=e: setattr(
+                    self._update_bar, "text", f"❌ Download failed: {err}"), 0)
+
+    def _install_apk_android(self, apk_path: str):
+        try:
+            Intent   = autoclass("android.content.Intent")
+            Uri      = autoclass("android.net.Uri")
+            File     = autoclass("java.io.File")
+            Build    = autoclass("android.os.Build")
+            Settings = autoclass("android.provider.Settings")
+
+            intent = Intent(Intent.ACTION_VIEW)
+            f = File(apk_path)
+
+            if Build.VERSION.SDK_INT >= 24:
+                FileProvider = autoclass(
+                    "androidx.core.content.FileProvider")
+                ctx = mActivity.getApplicationContext()
+                uri = FileProvider.getUriForFile(
+                    ctx,
+                    ctx.getPackageName() + ".fileprovider",
+                    f
+                )
+                intent.setDataAndType(uri,
+                    "application/vnd.android.package-archive")
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            else:
+                uri = Uri.fromFile(f)
+                intent.setDataAndType(uri,
+                    "application/vnd.android.package-archive")
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            mActivity.startActivity(intent)
+        except Exception as e:
+            Clock.schedule_once(
+                lambda dt, err=e: setattr(
+                    self._update_bar, "text", f"❌ Install error: {err}"), 0)
 
 
 if __name__ == "__main__":

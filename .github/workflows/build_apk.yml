@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -46,13 +49,37 @@ jobs:
           key: buildozer-${{ hashFiles('buildozer.spec') }}
           restore-keys: buildozer-
 
+      - name: Get version from buildozer.spec
+        id: get_version
+        run: |
+          VERSION=$(grep '^version' buildozer.spec | head -1 | cut -d'=' -f2 | tr -d ' ')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION-build${{ github.run_number }}" >> $GITHUB_OUTPUT
+
       - name: Build APK (debug)
         run: |
           buildozer -v android debug 2>&1
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Rename APK
+        run: |
+          APK=$(ls bin/*.apk | head -1)
+          mv "$APK" bin/RANI-AI-v${{ steps.get_version.outputs.version }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: RANI-AI-debug
-          path: bin/*.apk
-          if-no-files-found: error
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: "RANI AI v${{ steps.get_version.outputs.version }} (Build ${{ github.run_number }})"
+          body: |
+            ## RANI AI Mobile App
+            Auto-built from latest commit.
+
+            ### Install করুন:
+            1. নিচের APK download করুন
+            2. Phone-এ install করুন (Unknown sources allow করুন)
+            3. RANI PC app চালু করুন → mobile app-এ PC IP দিয়ে connect করুন
+
+            **Build:** ${{ github.run_number }}
+            **Commit:** ${{ github.sha }}
+          files: bin/RANI-AI-v${{ steps.get_version.outputs.version }}.apk
+          make_latest: true
